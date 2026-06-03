@@ -1,0 +1,654 @@
+/* ==========================================================================
+   全域變數與重設 (Variables & Reset)
+   ========================================================================== */
+:root {
+    --bg-dark: #0f172a;
+    --bg-card: rgba(15, 23, 42, 0.8);
+    --border-color: rgba(255, 255, 255, 0.08);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    
+    /* 質感主題色彩 */
+    --primary-cyan: #06b6d4;
+    --primary-cyan-hover: #22d3ee;
+    --primary-emerald: #10b981;
+    --primary-emerald-hover: #34d399;
+    --accent-red: #ef4444;
+    
+    /* 陰影與濾鏡 */
+    --shadow-premium: 0 20px 45px -10px rgba(0, 0, 0, 0.5), 0 10px 20px -5px rgba(0, 0, 0, 0.3);
+    --glass-blur: blur(16px);
+    
+    /* 轉場動畫速度 */
+    --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', 'Noto Sans TC', sans-serif;
+}
+
+body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+}
+
+/* ==========================================================================
+   地圖主容器 (Full-screen Map)
+   ========================================================================== */
+#map {
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+}
+
+/* 覆寫 Leaflet 預設樣式以融合深色質感 */
+.leaflet-container {
+    background: #0b0f19 !important;
+}
+
+.leaflet-tile {
+    filter: invert(90%) hue-rotate(180deg) brightness(85%) contrast(95%);
+}
+
+/* 自訂 Leaflet 縮放按鈕樣式 */
+.leaflet-bar {
+    border: none !important;
+    box-shadow: var(--shadow-premium) !important;
+}
+
+.leaflet-bar a {
+    background-color: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    backdrop-filter: var(--glass-blur);
+    transition: var(--transition-smooth);
+}
+
+.leaflet-bar a:hover {
+    background-color: rgba(6, 182, 212, 0.2) !important;
+    color: var(--primary-cyan) !important;
+}
+
+/* ==========================================================================
+   頂部發光標題面板 (Header Overlay)
+   ========================================================================== */
+.map-header {
+    position: absolute;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    width: 90%;
+    max-width: 680px;
+    padding: 16px 24px;
+    background: var(--bg-card);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    box-shadow: var(--shadow-premium);
+    text-align: center;
+    pointer-events: auto;
+}
+
+.map-header .logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+
+.map-header .header-icon {
+    font-size: 1.3rem;
+    color: var(--primary-cyan);
+    filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.6));
+    animation: pulseGlow 2s infinite alternate;
+}
+
+.map-header h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    background: linear-gradient(135deg, #ffffff 30%, var(--primary-cyan) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.map-header .subtitle {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 300;
+}
+
+/* ==========================================================================
+   自訂地圖標記漣漪動畫 (Animated Custom Marker)
+   ========================================================================== */
+.custom-marker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.marker-pin-wrapper {
+    position: relative;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.marker-ping-ring {
+    position: absolute;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: rgba(6, 182, 212, 0.4);
+    animation: pingOuter 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+    pointer-events: none;
+}
+
+.marker-core {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--primary-cyan-hover) 0%, var(--primary-cyan) 70%);
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 12px var(--primary-cyan);
+    transition: var(--transition-smooth);
+}
+
+.marker-pin-wrapper:hover .marker-core {
+    transform: scale(1.3);
+    background: radial-gradient(circle, #ffffff 0%, var(--primary-cyan-hover) 70%);
+    box-shadow: 0 0 20px #ffffff;
+}
+
+/* 預留項目專屬標記點樣式 */
+.marker-reserved .marker-core {
+    background: radial-gradient(circle, var(--primary-emerald-hover) 0%, var(--primary-emerald) 70%);
+    box-shadow: 0 0 12px var(--primary-emerald);
+}
+.marker-reserved .marker-ping-ring {
+    background-color: rgba(16, 185, 129, 0.4);
+}
+
+/* ==========================================================================
+   地圖說明圖例 (Map Legend Overlay)
+   ========================================================================== */
+.map-legend {
+    position: absolute;
+    bottom: 24px;
+    left: 24px;
+    z-index: 10;
+    padding: 14px 18px;
+    background: var(--bg-card);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: var(--shadow-premium);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.map-legend .legend-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+    font-weight: 700;
+}
+
+.map-legend .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.8rem;
+    color: var(--text-primary);
+}
+
+.pulse-dot-demo {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: var(--primary-cyan);
+    box-shadow: 0 0 8px var(--primary-cyan);
+    position: relative;
+}
+
+.pulse-dot-demo::after {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px solid var(--primary-cyan);
+    animation: pingOuter 1.5s infinite;
+}
+
+/* ==========================================================================
+   精緻毛玻璃彈出視窗 (Glassmorphism Modal & Overlay)
+   ========================================================================== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(2, 6, 23, 0.65);
+    backdrop-filter: blur(8px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+    padding: 16px;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Modal 卡片結構 */
+.modal-card {
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 24px;
+    width: 100%;
+    max-width: 680px;
+    box-shadow: var(--shadow-premium);
+    overflow: hidden;
+    transform: scale(0.9) translateY(20px);
+    opacity: 0;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+}
+
+.modal-overlay.active .modal-card {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+}
+
+/* Modal 頂部 */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h2 {
+    font-size: 1.35rem;
+    font-weight: 600;
+    background: linear-gradient(to right, #ffffff, var(--primary-cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.close-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary);
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: var(--transition-smooth);
+}
+
+.close-btn:hover {
+    background: rgba(239, 68, 110, 0.2);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: var(--accent-red);
+    transform: rotate(90deg);
+}
+
+/* ==========================================================================
+   多媒體播放器區塊 (Aspect Ratio-based Player)
+   ========================================================================== */
+.media-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background-color: #020617;
+    overflow: hidden;
+}
+
+.media-container video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* 開啟聲音浮動按鈕 */
+.unmute-btn {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(4px);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    transition: var(--transition-smooth);
+}
+
+.unmute-btn:hover {
+    background: var(--primary-cyan);
+    border-color: var(--primary-cyan);
+    color: #020617;
+    box-shadow: 0 0 15px rgba(6, 182, 212, 0.5);
+    transform: translateY(-2px);
+}
+
+.unmute-btn i {
+    font-size: 0.85rem;
+}
+
+/* 影片載入動畫 */
+.video-loader {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(15, 23, 42, 0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    z-index: 5;
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--transition-smooth);
+}
+
+.video-loader.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.video-loader i {
+    font-size: 2rem;
+    color: var(--primary-cyan);
+    filter: drop-shadow(0 0 8px var(--primary-cyan));
+}
+
+.video-loader span {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+}
+
+/* ==========================================================================
+   時間軸與控制面板 (Timeline & Controls)
+   ========================================================================== */
+.control-section {
+    padding: 24px;
+}
+
+.control-section .section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.control-section .section-title i {
+    color: var(--primary-cyan);
+    font-size: 1.1rem;
+}
+
+.control-section .section-title h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* 分段標籤切換按鈕 (Tabs Selector) */
+.time-tabs {
+    display: flex;
+    background: rgba(2, 6, 23, 0.4);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 4px;
+    gap: 4px;
+    margin-bottom: 24px;
+}
+
+.time-tab-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+}
+
+.time-tab-btn:hover {
+    color: var(--text-primary);
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.time-tab-btn.active {
+    color: #020617;
+    background-color: var(--primary-cyan);
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+}
+
+/* Slider 滑桿包裝器與樣式 */
+.slider-wrapper {
+    position: relative;
+    padding: 10px 4px 30px 4px;
+}
+
+/* 自訂滑桿外觀 */
+input[type="range"]#time-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.1);
+    outline: none;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+/* 滑動軌道的發光樣式 */
+input[type="range"]#time-slider::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+}
+
+/* 自訂滑塊 (Webkit) */
+input[type="range"]#time-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 3px solid var(--primary-cyan);
+    box-shadow: 0 0 10px var(--primary-cyan);
+    cursor: pointer;
+    margin-top: -8px; /* 垂直居中修正 */
+    transition: transform 0.1s ease, border-color 0.2s;
+}
+
+input[type="range"]#time-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+    background: var(--primary-cyan);
+    border-color: #ffffff;
+    box-shadow: 0 0 15px var(--primary-cyan);
+}
+
+/* 自訂滑塊 (Firefox) */
+input[type="range"]#time-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 3px solid var(--primary-cyan);
+    box-shadow: 0 0 10px var(--primary-cyan);
+    cursor: pointer;
+    transition: transform 0.1s ease;
+}
+
+input[type="range"]#time-slider::-moz-range-thumb:hover {
+    transform: scale(1.15);
+}
+
+/* 時間軸文字刻度 (Ticks Label) */
+.slider-ticks {
+    display: flex;
+    justify-content: space-between;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 0 4px;
+}
+
+.tick {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    user-select: none;
+}
+
+.tick.active {
+    color: var(--primary-cyan);
+    font-weight: 600;
+    filter: drop-shadow(0 0 5px rgba(6, 182, 212, 0.4));
+}
+
+.tick:hover {
+    color: var(--text-primary);
+}
+
+/* ==========================================================================
+   CSS Keyframes 動畫 (Animations)
+   ========================================================================== */
+@keyframes pingOuter {
+    0% {
+        transform: scale(0.5);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.6);
+        opacity: 0;
+    }
+}
+
+@keyframes pulseGlow {
+    0% {
+        opacity: 0.7;
+        filter: drop-shadow(0 0 4px rgba(6, 182, 212, 0.4));
+    }
+    100% {
+        opacity: 1;
+        filter: drop-shadow(0 0 12px rgba(6, 182, 212, 0.8));
+    }
+}
+
+/* ==========================================================================
+   響應式設計微調 (Responsive Web Design)
+   ========================================================================== */
+@media (max-width: 640px) {
+    .map-header {
+        top: 12px;
+        padding: 12px 16px;
+    }
+    
+    .map-header h1 {
+        font-size: 1.1rem;
+    }
+    
+    .map-header .subtitle {
+        font-size: 0.75rem;
+    }
+
+    .modal-card {
+        border-radius: 16px;
+    }
+
+    .modal-header {
+        padding: 14px 18px;
+    }
+
+    .control-section {
+        padding: 18px;
+    }
+
+    .time-tabs {
+        margin-bottom: 16px;
+    }
+
+    .time-tab-btn {
+        padding: 8px;
+        font-size: 0.8rem;
+    }
+
+    .tick {
+        font-size: 0.65rem;
+    }
+    
+    .map-legend {
+        bottom: 12px;
+        left: 12px;
+        padding: 8px 12px;
+    }
+    
+    .map-legend .legend-title {
+        font-size: 0.65rem;
+    }
+    
+    .map-legend .legend-item {
+        font-size: 0.7rem;
+    }
+}

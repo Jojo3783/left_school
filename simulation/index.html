@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台灣平交道交通模擬 - 單線塞車路口轉彎回堵系統</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+TC:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 側邊控制面板 (Sleek Glassmorphic Sidebar) -->
+        <aside class="control-panel">
+            <header class="panel-header">
+                <div class="logo">
+                    <span class="icon">🚥</span>
+                    <h1>平交道模擬系統</h1>
+                </div>
+                <p class="subtitle">台灣混亂單線道 & 路口轉彎塞車視角模擬</p>
+            </header>
+
+            <section class="control-section gate-controls">
+                <h2 class="section-title">平交道安全控制</h2>
+                <!-- 警告狀態警示燈與倒數看板 -->
+                <div class="warning-flasher-container">
+                    <div class="flasher-bulb left-bulb" id="flasher-left"></div>
+                    <div class="flasher-crossbuck">
+                        <span>鐵</span><span>路</span>
+                        <div class="cross-line"></div>
+                        <span>平</span><span>交</span>
+                    </div>
+                    <div class="flasher-bulb right-bulb" id="flasher-right"></div>
+                    
+                    <!-- 倒數計時電子看板 -->
+                    <div class="countdown-display" id="gate-countdown" style="display: none;">
+                        <span class="countdown-label">等候時間</span>
+                        <span class="countdown-num" id="countdown-sec">00</span>
+                    </div>
+                </div>
+                
+                <button id="btn-gate-toggle" class="btn-primary gate-open">
+                    <span class="btn-glow"></span>
+                    <span class="btn-text">🔔 柵欄升起 (安全通行)</span>
+                </button>
+                
+                <button id="btn-spawn-train" class="btn-secondary" disabled>
+                    <span class="btn-text">🚄 手動加派火車</span>
+                </button>
+            </section>
+
+            <section class="control-section simulation-settings">
+                <h2 class="section-title">模擬參數調整</h2>
+                
+                <div class="control-group">
+                    <div class="slider-label">
+                        <span>車流密度</span>
+                        <span class="slider-val" id="val-density">中</span>
+                    </div>
+                    <input type="range" id="slide-density" min="1" max="3" step="1" value="2">
+                    <div class="slider-ticks">
+                        <span>低</span>
+                        <span>中</span>
+                        <span>高</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="slider-label">
+                        <span>平交道等候時間</span>
+                        <span class="slider-val" id="val-wait-time">15秒</span>
+                    </div>
+                    <input type="range" id="slide-wait-time" min="5" max="40" step="5" value="15">
+                    <div class="slider-ticks">
+                        <span>5s</span>
+                        <span>15s</span>
+                        <span>30s</span>
+                        <span>40s</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="slider-label">
+                        <span>模擬流速</span>
+                        <span class="slider-val" id="val-speed">1.0x</span>
+                    </div>
+                    <input type="range" id="slide-speed" min="0.2" max="2.0" step="0.1" value="1.0">
+                    <div class="slider-ticks">
+                        <span>慢 (0.2x)</span>
+                        <span>正常</span>
+                        <span>快 (2.0x)</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="slider-label">
+                        <span>機車比例</span>
+                        <span class="slider-val" id="val-moto-ratio">70%</span>
+                    </div>
+                    <input type="range" id="slide-moto-ratio" min="0" max="100" step="5" value="70">
+                </div>
+
+                <div class="control-group">
+                    <div class="slider-label">
+                        <span>行人比例</span>
+                        <span class="slider-val" id="val-ped-ratio">20%</span>
+                    </div>
+                    <input type="range" id="slide-ped-ratio" min="0" max="50" step="5" value="20">
+                </div>
+            </section>
+
+            <section class="control-section audio-settings">
+                <div class="toggle-container">
+                    <label class="switch-label" for="switch-sound">🔊 平交道警報音效 (叮咚聲)</label>
+                    <label class="switch">
+                        <input type="checkbox" id="switch-sound" checked>
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
+            </section>
+
+            <!-- 數據統計儀表板 -->
+            <section class="control-section stats-panel">
+                <h2 class="section-title">即時流量監控</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-title">當前塞車數量</span>
+                        <span class="stat-value" id="stat-queue">0</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-title">已通過物件</span>
+                        <span class="stat-value text-green" id="stat-passed">0</span>
+                    </div>
+                </div>
+                
+                <div class="stats-bar-group">
+                    <div class="bar-label">
+                        <span>路口擁堵指數 (Congestion)</span>
+                        <span class="bar-val" id="val-congestion">0%</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="bar-congestion" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="stats-details">
+                    <div class="detail-row">
+                        <span>當前畫面列車數:</span>
+                        <span id="detail-train-count">0</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>歷史最大塞車量:</span>
+                        <span id="detail-max-queue">0</span>
+                    </div>
+                </div>
+            </section>
+
+            <footer class="panel-footer">
+                <p>💡 操作提示：放下欄杆後會自動啟動倒數計時！時間一到（且火車安全通過）欄杆即會自動升起。</p>
+            </footer>
+        </aside>
+
+        <!-- Canvas 渲染區 -->
+        <main class="canvas-container">
+            <div class="canvas-wrapper">
+                <canvas id="trafficCanvas"></canvas>
+            </div>
+        </main>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>

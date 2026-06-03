@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>互動式車流監測地圖 - 桃園市車流變化展示</title>
+    <!-- Leaflet.js CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+          crossorigin=""/>
+    <!-- Google Fonts: Inter & Noto Sans TC -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- 滿版地圖容器 -->
+    <div id="map"></div>
+
+    <!-- 底部版權與地圖圖例說明 -->
+    <div class="map-legend">
+        <div class="legend-title">圖例說明</div>
+        <div class="legend-item">
+            <span class="pulse-dot-demo"></span>
+            <span>點擊查看車流監測點</span>
+        </div>
+    </div>
+
+    <!-- 半透明遮罩與毛玻璃資訊視窗 (Modal) -->
+    <div id="modal-overlay" class="modal-overlay">
+        <div class="modal-card">
+            <!-- 視窗頂部區塊 -->
+            <div class="modal-header">
+                <h2 id="modal-title">車流觀測點</h2>
+                <button id="close-modal-btn" class="close-btn" aria-label="關閉視窗">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- 多媒體展示區塊 -->
+            <div class="media-container">
+                <!-- 預設靜音、自動播放、循環播放與行內播放的 HTML5 影片 -->
+                <video id="traffic-video" autoplay muted loop playsinline preload="auto">
+                    <!-- 來源將由 JS 動態替換 -->
+                    您的瀏覽器不支援 HTML5 影片。
+                </video>
+                <!-- 發光的靜音控制浮動按鈕 -->
+                <button id="unmute-btn" class="unmute-btn">
+                    <i class="fa-solid fa-volume-xmark"></i>
+                    <span>開啟聲音</span>
+                </button>
+                
+                <!-- 影片載入中提示 -->
+                <div id="video-loader" class="video-loader">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i>
+                    <span>載入影片中...</span>
+                </div>
+            </div>
+
+            <!-- 核心功能：時間軸滑桿與按鈕連動區區塊 -->
+            <div class="control-section">
+                <div class="section-title">
+                    <i class="fa-regular fa-clock"></i>
+                    <h3>時段車流觀測與切換</h3>
+                </div>
+
+                <!-- 分段時間軸按鈕 (提供直覺的點擊體驗) -->
+                <div class="time-tabs">
+                    <button class="time-tab-btn active" data-time-index="0">
+                        <i class="fa-solid fa-sun"></i>
+                        <span>早上</span>
+                    </button>
+                    <button class="time-tab-btn" data-time-index="1">
+                        <i class="fa-solid fa-cloud-sun"></i>
+                        <span>下午</span>
+                    </button>
+                    <button class="time-tab-btn" data-time-index="2">
+                        <i class="fa-solid fa-moon"></i>
+                        <span>晚上</span>
+                    </button>
+                </div>
+
+                <!-- 精緻的 Slider 滑桿 -->
+                <div class="slider-wrapper">
+                    <input type="range" id="time-slider" min="0" max="2" value="0" step="1" aria-label="時間軸">
+                    <div class="slider-ticks">
+                        <span class="tick active" data-time-index="0">早上 (06:00 - 12:00)</span>
+                        <span class="tick" data-time-index="1">下午 (12:00 - 18:00)</span>
+                        <span class="tick" data-time-index="2">晚上 (18:00 - 06:00)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet.js JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
+            crossorigin=""></script>
+    <!-- Custom JS -->
+    <script src="app.js"></script>
+</body>
+</html>
