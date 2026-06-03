@@ -833,7 +833,19 @@ class Simulation {
 
             // 1. 垂直單線道上的平交道阻截
             if (self.state === 'vertical') {
-                if ((this.gateState === 'CLOSED' || this.gateState === 'CLOSING') && self.y > this.stopLineY) {
+                // 判斷是否有火車正在通過或即將接近路口（給予安全緩衝距離，避免車輛來不及煞車）
+                const isTrainDanger = this.trains.some(train => {
+                    const safetyBuffer = 150;
+                    if (train.direction === 1) {
+                        return (train.x + train.length/2 + 20 >= this.roadLeft - safetyBuffer) && 
+                               (train.x - train.length/2 - 20 <= this.roadRight);
+                    } else {
+                        return (train.x - train.length/2 - 20 <= this.roadRight + safetyBuffer) && 
+                               (train.x + train.length/2 + 20 >= this.roadLeft);
+                    }
+                });
+
+                if (((this.gateState === 'CLOSED' || this.gateState === 'CLOSING') || isTrainDanger) && self.y > this.stopLineY) {
                     const distToStop = self.y - this.stopLineY;
                     const decelerationDistance = self.type === 'Car' ? 120 : (self.type === 'Motorcycle' ? 80 : 40);
                     const stopBuffer = self.width / 2 + 10; 
