@@ -2,23 +2,13 @@
 // 車流資料配置 (Traffic Data Configuration)
 // ==========================================================================
 const trafficData = {
-    zhongyi: {
-        name: "新中北路與實踐路口",
-        coords: [24.958395, 121.237722],
-        isReserved: false,
-        media: {
-            morning: "./media/zhongyi_morning.mp4",
-            afternoon: "./media/zhongyi_afternoon.mp4",
-            night: "./media/zhongyi_night.mp4"
-        }
-    },
     xinzhongbei: {
-        name: "新中北路151巷",
+        name: "新中北路248巷與忠義路23巷",
         coords: [24.959447, 121.239866],
         isReserved: false,
         media: {
             morning: "./media/xinzhongbei_morning.mp4",
-            afternoon: "./media/xinzhongbei_afternoon.mp4",
+            afternoon: "./media/afternoon1.mp4",
             night: "./media/xinzhongbei_night.mp4"
         }
     }
@@ -40,7 +30,7 @@ const markerCoords = Object.values(trafficData).map(loc => loc.coords);
 const bounds = L.latLngBounds(markerCoords);
 
 // 2. 設定極致契合觀測點的中心與縮放
-const centerZhongli = [24.9589, 121.2388]; 
+const centerZhongli = [24.9589, 121.2388];
 const optimalZoom = 17.0; // 💡 鎖定在 17.0 級高倍率縮放，路牌與街名清晰可見
 
 // 3. 初始化地圖，鎖定最佳縮放與適度限制可拖曳區域，防止黑屏與卡死
@@ -84,10 +74,10 @@ const ticks = document.querySelectorAll('.tick');
 // ==========================================================================
 Object.keys(trafficData).forEach(key => {
     const loc = trafficData[key];
-    
+
     // 依據是否為預留項目，設定不同的 CSS 類別
     const markerClass = loc.isReserved ? "custom-marker marker-reserved" : "custom-marker";
-    
+
     // 建立 HTML 發光漣漪結構
     const customIcon = L.divIcon({
         className: markerClass,
@@ -103,7 +93,7 @@ Object.keys(trafficData).forEach(key => {
 
     // 建立 Leaflet 標記並加入地圖
     const marker = L.marker(loc.coords, { icon: customIcon }).addTo(map);
-    
+
     // 設定懸浮文字提示 (Tooltip)
     marker.bindTooltip(loc.name, {
         direction: 'top',
@@ -125,13 +115,13 @@ Object.keys(trafficData).forEach(key => {
 function openTrafficModal(locationId) {
     currentActiveLocationId = locationId;
     const loc = trafficData[locationId];
-    
+
     // 1. 設定視窗標題
     modalTitle.textContent = loc.name;
-    
+
     // 2. 開啟遮罩 (觸發 CSS transition 動畫)
     modalOverlay.classList.add('active');
-    
+
     // 3. 根據當前選擇時段，載入並播放影片
     loadTrafficVideo();
 }
@@ -139,14 +129,14 @@ function openTrafficModal(locationId) {
 // 關閉資訊視窗
 function closeTrafficModal() {
     modalOverlay.classList.remove('active');
-    
+
     // 暫停影片以節省頻寬與運算資源
     trafficVideo.pause();
-    
+
     // 重設靜音狀態為靜音自動播放
     trafficVideo.muted = true;
     updateUnmuteButtonUI(true);
-    
+
     currentActiveLocationId = null;
 }
 
@@ -170,25 +160,25 @@ window.addEventListener('keydown', (e) => {
 // 載入對應時段的影片邏輯
 function loadTrafficVideo() {
     if (!currentActiveLocationId) return;
-    
+
     const loc = trafficData[currentActiveLocationId];
     const timeKey = timeKeys[currentActiveTimeIndex];
     const videoSrc = loc.media[timeKey];
-    
+
     // 顯示載入動畫
     videoLoader.classList.add('active');
-    
+
     // 設定影片來源
     trafficVideo.src = videoSrc;
     trafficVideo.load();
-    
+
     // 當影片載入完成，可以順暢播放時
     trafficVideo.oncanplay = () => {
         videoLoader.classList.remove('active');
-        
+
         // 瀏覽器通常會阻擋有聲音的影片自動播放，因此我們使用靜音播放
         const playPromise = trafficVideo.play();
-        
+
         if (playPromise !== undefined) {
             playPromise.catch(error => {
                 console.log("自動播放受到瀏覽器安全性策略限制:", error);
@@ -236,12 +226,12 @@ function updateUnmuteButtonUI(isMuted) {
 // 統一狀態更新與畫面渲染
 function updateTimeState(newTimeIndex) {
     if (currentActiveTimeIndex === newTimeIndex) return;
-    
+
     currentActiveTimeIndex = newTimeIndex;
-    
+
     // 1. 同步更新 Slider 的值
     timeSlider.value = newTimeIndex;
-    
+
     // 2. 同步更新分段按鈕 (Tab Buttons) 的 Active 樣式
     tabButtons.forEach(btn => {
         const btnIndex = parseInt(btn.getAttribute('data-time-index'));
@@ -251,7 +241,7 @@ function updateTimeState(newTimeIndex) {
             btn.classList.remove('active');
         }
     });
-    
+
     // 3. 同步更新滑桿刻度 (Ticks) 的 Active 樣式
     ticks.forEach(tick => {
         const tickIndex = parseInt(tick.getAttribute('data-time-index'));
@@ -261,7 +251,7 @@ function updateTimeState(newTimeIndex) {
             tick.classList.remove('active');
         }
     });
-    
+
     // 4. 動態抽換影片來源並播放
     loadTrafficVideo();
 }
